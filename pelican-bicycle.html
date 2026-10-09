@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鹈鹕海边骑行</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0d1b2a;
+  }
+
+  .scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* ---------- 天空 ---------- */
+  .sky {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #6fc5e8 0%, #9fdcf2 42%, #d9f2fb 62%, #fdf3dd 72%);
+  }
+
+  .sun {
+    position: absolute;
+    top: 8%;
+    right: 14%;
+    width: 12vmin;
+    height: 12vmin;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #fffbe0 0%, #ffe680 45%, #ffd24d 70%, rgba(255,210,77,0) 72%);
+    box-shadow: 0 0 12vmin 4vmin rgba(255, 224, 130, 0.55);
+    animation: sunPulse 6s ease-in-out infinite;
+  }
+  @keyframes sunPulse {
+    0%, 100% { transform: scale(1); opacity: 0.95; }
+    50%      { transform: scale(1.06); opacity: 1; }
+  }
+
+  /* ---------- 云 ---------- */
+  .cloud {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    opacity: 0.85;
+    filter: blur(0.4px);
+  }
+  .cloud::before, .cloud::after {
+    content: "";
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+  }
+  .cloud::before { width: 70%; height: 120%; left: -30%; top: 6%; }
+  .cloud::after  { width: 60%; height: 100%; right: -26%; top: 14%; }
+
+  .cloud.c1 { width: 16vmin; height: 5vmin; top: 12%; left: 0;  animation: drift 46s linear infinite; }
+  .cloud.c2 { width: 11vmin; height: 3.6vmin; top: 22%; left: 0; animation: drift 62s linear infinite; animation-delay: -22s; opacity: 0.7; }
+  .cloud.c3 { width: 20vmin; height: 6vmin; top: 5%;  left: 0;  animation: drift 78s linear infinite; animation-delay: -50s; opacity: 0.6; }
+
+  @keyframes drift {
+    from { transform: translateX(-30vmin); }
+    to   { transform: translateX(130vw); }
+  }
+
+  /* ---------- 海面 ---------- */
+  .sea {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 30vh;
+    height: 18vh;
+    background: linear-gradient(180deg, #2f7fb0 0%, #3f97c9 45%, #67b6dd 100%);
+    overflow: hidden;
+  }
+  .sea::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(255,255,255,0.35) 0 2px,
+        rgba(255,255,255,0)   2px 60px);
+    opacity: 0.5;
+    animation: waveMove 4s linear infinite;
+  }
+  @keyframes waveMove {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-60px); }
+  }
+
+  .boat {
+    position: absolute;
+    bottom: 2vh;
+    left: 0;
+    width: 6vmin;
+    animation: sail 38s linear infinite;
+  }
+  .boat .hull {
+    width: 6vmin; height: 1.6vmin;
+    background: #7a4a2b;
+    border-radius: 0 0 40% 40%;
+  }
+  .boat .sailspan {
+    width: 0; height: 0;
+    border-left: 2.6vmin solid transparent;
+    border-right: 0 solid transparent;
+    border-bottom: 4vmin solid #ffffff;
+    margin-left: 0.6vmin;
+    margin-bottom: -0.2vmin;
+  }
+  @keyframes sail {
+    from { transform: translateX(-12vw); }
+    to   { transform: translateX(112vw); }
+  }
+
+  /* ---------- 通用滚动层 ---------- */
+  .scroll-layer {
+    position: absolute;
+    left: 0; right: 0;
+    overflow: hidden;
+  }
+  .track {
+    display: flex;
+    width: 3200px;
+    animation: scrollX var(--dur) linear infinite;
+    will-change: transform;
+  }
+  .group {
+    display: flex;
+    align-items: flex-end;
+    width: 1600px;
+    height: 100%;
+    flex: 0 0 1600px;
+  }
+  @keyframes scrollX {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-1600px); }
+  }
+
+  /* ---------- 远景小镇 ---------- */
+  .far-town {
+    bottom: 30vh;
+    height: 16vh;
+  }
+  .far-town .group { justify-content: space-around; gap: 0; }
+
+  .fhouse {
+    position: relative;
+    border-radius: 3px 3px 0 0;
+    opacity: 0.85;
+  }
+  .fhouse .roof {
+    position: absolute;
+    top: -1.4vh; left: -8%;
+    width: 116%; height: 1.6vh;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* ---------- 近景小镇 ---------- */
+  .near-town {
+    bottom: 26vh;
+    height: 30vh;
+  }
+  .near-town .group { justify-content: space-around; }
+
+  .house {
+    position: relative;
+    flex: 0 0 auto;
+    border-radius: 4px 4px 0 0;
+    box-shadow: inset -10px 0 18px rgba(0,0,0,0.08);
+  }
+  .house .roof {
+    position: absolute;
+    top: -2.6vh; left: -8%;
+    width: 116%; height: 3vh;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .house .win {
+    position: absolute;
+    background: #fff6cf;
+    border: 1.5px solid rgba(70,50,30,0.35);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(255, 236, 160, 0.6);
+  }
+  .house .door {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2.4vh; height: 4vh;
+    background: #7a4a2b;
+    border-radius: 3px 3px 0 0;
+  }
+  .house .awning {
+    position: absolute;
+    left: -6%;
+    width: 112%;
+    height: 1.8vh;
+    background: repeating-linear-gradient(90deg, #ef6f5c 0 2.2vh, #fff2e2 2.2vh 4.4vh);
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+  }
+
+  /* ---------- 棕榈树 ---------- */
+  .palm {
+    flex: 0 0 auto;
+    height: 26vh;
+    width: 14vh;
+    position: relative;
+    bottom: 0;
+  }
+  .palm svg { width: 100%; height: 100%; display: block; }
+  .palm .fronds {
+    transform-origin: 50% 26%;
+    animation: sway 3.6s ease-in-out infinite;
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+  }
+
+  /* ---------- 路灯 ---------- */
+  .lamp {
+    flex: 0 0 auto;
+    position: relative;
+    width: 2vh;
+    height: 20vh;
+    margin: 0 4vh;
+  }
+  .lamp .pole {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 0.7vh; height: 100%;
+    background: linear-gradient(90deg, #4a5058, #8b949e, #4a5058);
+    border-radius: 4px;
+  }
+  .lamp .arm {
+    position: absolute;
+    top: 0; left: 50%;
+    width: 5vh; height: 0.7vh;
+    background: #5a6169;
+    border-radius: 4px;
+  }
+  .lamp .bulb {
+    position: absolute;
+    top: 0.5vh; left: calc(50% + 4vh);
+    width: 1.8vh; height: 1.8vh;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fffbe3, #ffd86b 70%);
+    box-shadow: 0 0 2.4vh 0.6vh rgba(255, 216, 107, 0.5);
+  }
+
+  /* ---------- 公路 ---------- */
+  .road {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 28vh;
+    background: linear-gradient(180deg, #6d7681 0%, #5b636d 30%, #464d56 100%);
+  }
+  .curb {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 1.6vh;
+    background: repeating-linear-gradient(90deg, #f2f2ef 0 3vh, #d8d8d2 3vh 6vh);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  }
+  .lane {
+    position: absolute;
+    left: 0; right: 0;
+    top: 46%;
+    height: 0.9vh;
+    background: repeating-linear-gradient(90deg,
+      #f7e58a 0 7vh,
+      rgba(247,229,138,0) 7vh 14vh);
+    animation: laneMove 1.1s linear infinite;
+    opacity: 0.9;
+  }
+  @keyframes laneMove {
+    from { background-position-x: 0; }
+    to   { background-position-x: -14vh; }
+  }
+  .lane2 {
+    background: repeating-linear-gradient(90deg,
+      #f7e58a 0 7vh,
+      rgba(247,229,138,0) 7vh 14vh);
+    animation-duration: 1.1s;
+  }
+  .speed-lines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(100deg,
+      rgba(255,255,255,0.06) 0 2px,
+      rgba(255,255,255,0) 2px 120px);
+    animation: laneMove 0.9s linear infinite;
+  }
+
+  /* ---------- 骑行者 ---------- */
+  .rider {
+    position: absolute;
+    left: 46%;
+    bottom: 13vh;
+    width: 40vw;
+    max-width: 620px;
+    min-width: 320px;
+    transform: translateX(-50%);
+    z-index: 10;
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.22));
+  }
+  .rider-bob {
+    animation: bob 1.2s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+    50%      { transform: translateY(-1.1%) rotate(0.4deg); }
+  }
+  .rider svg { width: 100%; height: auto; display: block; }
+
+  /* ---------- 地面阴影 ---------- */
+  .ground-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 12vh;
+    width: 26vw;
+    max-width: 420px;
+    height: 3vh;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%);
+    z-index: 9;
+    animation: shadowPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes shadowPulse {
+    0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.9; }
+    50%      { transform: translateX(-50%) scaleX(0.94); opacity: 0.7; }
+  }
+
+  /* ---------- 飘动的羽毛/气泡 ---------- */
+  .puff {
+    position: absolute;
+    width: 1.2vmin; height: 1.2vmin;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    bottom: 20vh;
+    left: 0;
+    animation: puffFly 5s linear infinite;
+    z-index: 11;
+  }
+  .puff.p2 { animation-delay: -1.6s; animation-duration: 6s; }
+  .puff.p3 { animation-delay: -3.2s; animation-duration: 4.4s; }
+  @keyframes puffFly {
+    0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
+    15%  { opacity: 0.9; }
+    100% { transform: translate(-38vw, -12vh) scale(1.4); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <div class="sky"></div>
+  <div class="sun"></div>
+
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+
+  <!-- 海 -->
+  <div class="sea">
+    <div class="boat">
+      <div class="sailspan"></div>
+      <div class="hull"></div>
+    </div>
+  </div>
+
+  <!-- 远景小镇 -->
+  <div class="scroll-layer far-town">
+    <div class="track" style="--dur: 26s;">
+      <div class="group">
+        <div class="fhouse" style="width:5vw;height:7vh;background:#e9d9c3;"><div class="roof" style="background:#c96f5c"></div></div>
+        <div class="fhouse" style="width:4vw;height:9vh;background:#f0e3d0;"><div class="roof" style="background:#8a9bb5"></div></div>
+        <div class="fhouse" style="width:6vw;height:6vh;background:#dfe7ee;"><div class="roof" style="background:#b5795f"></div></div>
+        <div class="fhouse" style="width:4.5vw;height:8vh;background:#eee0cb;"><div class="roof" style="background:#7f9c8a"></div></div>
+        <div class="fhouse" style="width:5.5vw;height:7.5vh;background:#f3e8d6;"><div class="roof" style="background:#c96f5c"></div></div>
+        <div class="fhouse" style="width:4vw;height:6.5vh;background:#e5dccb;"><div class="roof" style="background:#8a9bb5"></div></div>
+        <div class="fhouse" style="width:6vw;height:9vh;background:#efe3d1;"><div class="roof" style="background:#a86a55"></div></div>
+        <div class="fhouse" style="width:4.5vw;height:7vh;background:#e9dcc8;"><div class="roof" style="background:#7f9c8a"></div></div>
+      </div>
+      <div class="group">
+        <div class="fhouse" style="width:5vw;height:7vh;background:#e9d9c3;"><div class="roof" style="background:#c96f5c"></div></div>
+        <div class="fhouse" style="width:4vw;height:9vh;background:#f0e3d0;"><div class="roof" style="background:#8a9bb5"></div></div>
+        <div class="fhouse" style="width:6vw;height:6vh;background:#dfe7ee;"><div class="roof" style="background:#b5795f"></div></div>
+        <div class="fhouse" style="width:4.5vw;height:8vh;background:#eee0cb;"><div class="roof" style="background:#7f9c8a"></div></div>
+        <div class="fhouse" style="width:5.5vw;height:7.5vh;background:#f3e8d6;"><div class="roof" style="background:#c96f5c"></div></div>
+        <div class="fhouse" style="width:4vw;height:6.5vh;background:#e5dccb;"><div class="roof" style="background:#8a9bb5"></div></div>
+        <div class="fhouse" style="width:6vw;height:9vh;background:#efe3d1;"><div class="roof" style="background:#a86a55"></div></div>
+        <div class="fhouse" style="width:4.5vw;height:7vh;background:#e9dcc8;"><div class="roof" style="background:#7f9c8a"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 近景小镇 -->
+  <div class="scroll-layer near-town">
+    <div class="track" style="--dur: 13s;">
+      <div class="group">
+
+        <div class="house" style="width:12vw;height:16vh;background:#ffe1b0;">
+          <div class="roof" style="background:#e06a55;"></div>
+          <div class="awning" style="top:11vh;"></div>
+          <div class="win" style="top:3vh;left:18%;width:3vh;height:3.6vh;"></div>
+          <div class="win" style="top:3vh;right:18%;width:3vh;height:3.6vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="palm">
+          <svg viewBox="0 0 100 200">
+            <path d="M50 200 Q46 130 52 78" stroke="#a9773f" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M50 200 Q46 130 52 78" stroke="#c69250" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+            <g class="fronds">
+              <ellipse cx="52" cy="70" rx="34" ry="9" fill="#3f9d5b" transform="rotate(-28 52 70)"/>
+              <ellipse cx="52" cy="70" rx="34" ry="9" fill="#4bb069" transform="rotate(24 52 70)"/>
+              <ellipse cx="52" cy="70" rx="30" ry="8" fill="#359052" transform="rotate(-72 52 70)"/>
+              <ellipse cx="52" cy="70" rx="30" ry="8" fill="#57bd73" transform="rotate(66 52 70)"/>
+              <ellipse cx="52" cy="70" rx="24" ry="7" fill="#2f8a4b" transform="rotate(-6 52 70)"/>
+              <circle cx="52" cy="72" r="6" fill="#7a5a2e"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="house" style="width:10vw;height:12vh;background:#ffd0c4;">
+          <div class="roof" style="background:#7d96b8;"></div>
+          <div class="win" style="top:2.4vh;left:50%;transform:translateX(-50%);width:3.4vh;height:4vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="lamp">
+          <div class="pole"></div>
+          <div class="arm"></div>
+          <div class="bulb"></div>
+        </div>
+
+        <div class="house" style="width:14vw;height:20vh;background:#cfe9f7;">
+          <div class="roof" style="background:#5b8a6e;"></div>
+          <div class="awning" style="top:13vh;background:repeating-linear-gradient(90deg,#4a9dc4 0 2.2vh,#eaf7fd 2.2vh 4.4vh);"></div>
+          <div class="win" style="top:3vh;left:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:3vh;left:38%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:3vh;right:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;left:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;left:38%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;right:12%;width:3vh;height:3.4vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="house" style="width:9vw;height:13vh;background:#f7e2a8;">
+          <div class="roof" style="background:#c25f4c;"></div>
+          <div class="win" style="top:2.6vh;left:20%;width:2.8vh;height:3.2vh;"></div>
+          <div class="win" style="top:2.6vh;right:20%;width:2.8vh;height:3.2vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="palm" style="height:22vh;">
+          <svg viewBox="0 0 100 200">
+            <path d="M50 200 Q54 130 48 78" stroke="#a9773f" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M50 200 Q54 130 48 78" stroke="#c69250" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+            <g class="fronds" style="animation-delay:-1.2s">
+              <ellipse cx="48" cy="70" rx="32" ry="9" fill="#3f9d5b" transform="rotate(-24 48 70)"/>
+              <ellipse cx="48" cy="70" rx="32" ry="9" fill="#4bb069" transform="rotate(28 48 70)"/>
+              <ellipse cx="48" cy="70" rx="28" ry="8" fill="#359052" transform="rotate(-68 48 70)"/>
+              <ellipse cx="48" cy="70" rx="28" ry="8" fill="#57bd73" transform="rotate(70 48 70)"/>
+              <ellipse cx="48" cy="70" rx="22" ry="7" fill="#2f8a4b" transform="rotate(0 48 70)"/>
+              <circle cx="48" cy="72" r="6" fill="#7a5a2e"/>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+      <div class="group">
+
+        <div class="house" style="width:12vw;height:16vh;background:#ffe1b0;">
+          <div class="roof" style="background:#e06a55;"></div>
+          <div class="awning" style="top:11vh;"></div>
+          <div class="win" style="top:3vh;left:18%;width:3vh;height:3.6vh;"></div>
+          <div class="win" style="top:3vh;right:18%;width:3vh;height:3.6vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="palm">
+          <svg viewBox="0 0 100 200">
+            <path d="M50 200 Q46 130 52 78" stroke="#a9773f" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M50 200 Q46 130 52 78" stroke="#c69250" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+            <g class="fronds">
+              <ellipse cx="52" cy="70" rx="34" ry="9" fill="#3f9d5b" transform="rotate(-28 52 70)"/>
+              <ellipse cx="52" cy="70" rx="34" ry="9" fill="#4bb069" transform="rotate(24 52 70)"/>
+              <ellipse cx="52" cy="70" rx="30" ry="8" fill="#359052" transform="rotate(-72 52 70)"/>
+              <ellipse cx="52" cy="70" rx="30" ry="8" fill="#57bd73" transform="rotate(66 52 70)"/>
+              <ellipse cx="52" cy="70" rx="24" ry="7" fill="#2f8a4b" transform="rotate(-6 52 70)"/>
+              <circle cx="52" cy="72" r="6" fill="#7a5a2e"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="house" style="width:10vw;height:12vh;background:#ffd0c4;">
+          <div class="roof" style="background:#7d96b8;"></div>
+          <div class="win" style="top:2.4vh;left:50%;transform:translateX(-50%);width:3.4vh;height:4vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="lamp">
+          <div class="pole"></div>
+          <div class="arm"></div>
+          <div class="bulb"></div>
+        </div>
+
+        <div class="house" style="width:14vw;height:20vh;background:#cfe9f7;">
+          <div class="roof" style="background:#5b8a6e;"></div>
+          <div class="awning" style="top:13vh;background:repeating-linear-gradient(90deg,#4a9dc4 0 2.2vh,#eaf7fd 2.2vh 4.4vh);"></div>
+          <div class="win" style="top:3vh;left:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:3vh;left:38%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:3vh;right:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;left:12%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;left:38%;width:3vh;height:3.4vh;"></div>
+          <div class="win" style="top:8.5vh;right:12%;width:3vh;height:3.4vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="house" style="width:9vw;height:13vh;background:#f7e2a8;">
+          <div class="roof" style="background:#c25f4c;"></div>
+          <div class="win" style="top:2.6vh;left:20%;width:2.8vh;height:3.2vh;"></div>
+          <div class="win" style="top:2.6vh;right:20%;width:2.8vh;height:3.2vh;"></div>
+          <div class="door"></div>
+        </div>
+
+        <div class="palm" style="height:22vh;">
+          <svg viewBox="0 0 100 200">
+            <path d="M50 200 Q54 130 48 78" stroke="#a9773f" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M50 200 Q54 130 48 78" stroke="#c69250" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+            <g class="fronds" style="animation-delay:-1.2s">
+              <ellipse cx="48" cy="70" rx="32" ry="9" fill="#3f9d5b" transform="rotate(-24 48 70)"/>
+              <ellipse cx="48" cy="70" rx="32" ry="9" fill="#4bb069" transform="rotate(28 48 70)"/>
+              <ellipse cx="48" cy="70" rx="28" ry="8" fill="#359052" transform="rotate(-68 48 70)"/>
+              <ellipse cx="48" cy="70" rx="28" ry="8" fill="#57bd73" transform="rotate(70 48 70)"/>
+              <ellipse cx="48" cy="70" rx="22" ry="7" fill="#2f8a4b" transform="rotate(0 48 70)"/>
+              <circle cx="48" cy="72" r="6" fill="#7a5a2e"/>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 公路 -->
+  <div class="road">
+    <div class="curb"></div>
+    <div class="speed-lines"></div>
+    <div class="lane"></div>
+  </div>
+
+  <div class="ground-shadow"></div>
+
+  <!-- 骑行者：鹈鹕 + 自行车 -->
+  <div class="rider">
+    <div class="rider-bob">
+      <svg viewBox="0 0 460 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="70%" stop-color="#eef3f8"/>
+            <stop offset="100%" stop-color="#d8e2ec"/>
+          </linearGradient>
+          <linearGradient id="wingGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e6eef6"/>
+            <stop offset="100%" stop-color="#c3d2e0"/>
+          </linearGradient>
+          <linearGradient id="beakGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ffcf5c"/>
+            <stop offset="100%" stop-color="#f0a52e"/>
+          </linearGradient>
+          <linearGradient id="pouchGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffd977"/>
+            <stop offset="100%" stop-color="#ee9f42"/>
+          </linearGradient>
+        </defs>
+
+        <!-- ===== 车轮 ===== -->
+        <g class="wheel">
+          <g>
+            <animateTransform attributeName="transform" type="rotate"
+              from="0 150 250" to="360 150 250" dur="1.2s" repeatCount="indefinite"/>
+            <circle cx="150" cy="250" r="48" fill="none" stroke="#222831" stroke-width="7"/>
+            <circle cx="150" cy="250" r="43" fill="none" stroke="#37404b" stroke-width="2"/>
+            <g stroke="#9aa7b4" stroke-width="2">
+              <line x1="150" y1="205" x2="150" y2="295"/>
+              <line x1="105" y1="250" x2="195" y2="250"/>
+              <line x1="118" y1="218" x2="182" y2="282"/>
+              <line x1="118" y1="282" x2="182" y2="218"/>
+            </g>
+            <circle cx="150" cy="250" r="7" fill="#5b6673"/>
+            <circle cx="150" cy="222" r="4" fill="#e05f4c"/>
+          </g>
+        </g>
+
+        <g class="wheel">
+          <g>
+            <animateTransform attributeName="transform" type="rotate"
+              from="0 330 250" to="360 330 250" dur="1.2s" repeatCount="indefinite"/>
+            <circle cx="330" cy="250" r="48" fill="none" stroke="#222831" stroke-width="7"/>
+            <circle cx="330" cy="250" r="43" fill="none" stroke="#37404b" stroke-width="2"/>
+            <g stroke="#9aa7b4" stroke-width="2">
+              <line x1="330" y1="205" x2="330" y2="295"/>
+              <line x1="285" y1="250" x2="375" y2="250"/>
+              <line x1="298" y1="218" x2="362" y2="282"/>
+              <line x1="298" y1="282" x2="362" y2="218"/>
+            </g>
+            <circle cx="330" cy="250" r="7" fill="#5b6673"/>
+            <circle cx="330" cy="222" r="4" fill="#e05f4c"/>
+          </g>
+        </g>
+
+        <!-- ===== 后腿（远侧） ===== -->
+        <g class="leg-back">
+          <animateTransform attributeName="transform" type="rotate"
+            values="-15 186 152; 13 186 152; -15 186 152" dur="1.2s"
+            begin="-0.6s" repeatCount="indefinite"/>
+          <path d="M186 152 L206 202 L222 244" fill="none" stroke="#e8942c" stroke-width="9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="226" cy="248" rx="11" ry="5" fill="#d97f22" transform="rotate(18 226 248)"/>
+        </g>
+
+        <!-- ===== 车架 ===== -->
+        <g stroke="#242a33" stroke-width="7" stroke-linecap="round" fill="none">
+          <line x1="150" y1="250" x2="238" y2="245"/>
+          <line x1="238" y1="245" x2="212" y2="168"/>
+          <line x1="212" y1="168" x2="150" y2="250"/>
+          <line x1="212" y1="168" x2="310" y2="172"/>
+          <line x1="238" y1="245" x2="310" y2="172"/>
+          <line x1="310" y1="172" x2="330" y2="250"/>
+          <line x1="310" y1="172" x2="298" y2="150"/>
+        </g>
+        <!-- 车把 -->
+        <path d="M286 148 Q306 140 324 150" fill="none" stroke="#242a33" stroke-width="7" stroke-linecap="round"/>
+        <!-- 车座 -->
+        <ellipse cx="204" cy="152" rx="24" ry="9" fill="#3c444f"/>
+        <!-- 链条 -->
+        <path d="M150 250 L238 245" stroke="#7d8894" stroke-width="2.5" stroke-dasharray="4 4">
+          <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="0.4s" repeatCount="indefinite"/>
+        </path>
+
+        <!-- ===== 曲柄 + 脚踏 ===== -->
+        <g class="crank">
+          <animateTransform attributeName="transform" type="rotate"
+            from="0 238 245" to="360 238 245" dur="1.2s" repeatCount="indefinite"/>
+          <line x1="238" y1="245" x2="262" y2="245" stroke="#4a545f" stroke-width="6" stroke-linecap="round"/>
+          <line x1="238" y1="245" x2="214" y2="245" stroke="#4a545f" stroke-width="6" stroke-linecap="round"/>
+          <rect x="256" y="242" width="14" height="6" rx="2" fill="#20262d"/>
+          <rect x="206" y="242" width="14" height="6" rx="2" fill="#20262d"/>
+          <circle cx="238" cy="245" r="9" fill="#5b6673"/>
+          <circle cx="238" cy="245" r="4" fill="#2b323a"/>
+        </g>
+
+        <!-- ===== 前腿（近侧） ===== -->
+        <g class="leg-front">
+          <animateTransform attributeName="transform" type="rotate"
+            values="-14 186 152; 14 186 152; -14 186 152" dur="1.2s"
+            repeatCount="indefinite"/>
+          <path d="M186 152 L210 205 L254 250" fill="none" stroke="#f2a63a" stroke-width="10"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="260" cy="252" rx="12" ry="5.5" fill="#e8942c" transform="rotate(16 260 252)"/>
+        </g>
+
+        <!-- ===== 鹈鹕 ===== -->
+        <g class="bird">
+          <animateTransform attributeName="transform" type="translate"
+            values="0 0; 0 -2.5; 0 0" dur="1.2s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" type="rotate"
+            values="-1.4 190 140; 1.4 190 140; -1.4 190 140" dur="1.2s" repeatCount="indefinite" additive="sum"/>
+
+          <!-- 尾羽 -->
+          <path d="M132 118 Q112 122 104 138 Q124 136 138 128 Z" fill="#dbe5ef"/>
+
+          <!-- 身体 -->
+          <ellipse cx="186" cy="124" rx="50" ry="38" fill="url(#bodyGrad)"
+                   stroke="#c9d6e2" stroke-width="2" transform="rotate(-6 186 124)"/>
+
+          <!-- 翅膀 -->
+          <path d="M158 100 Q200 92 226 116 Q208 148 168 148 Q148 132 158 100 Z"
+                fill="url(#wingGrad)" stroke="#c2d0de" stroke-width="2"/>
+          <path d="M168 112 Q196 110 214 122" fill="none" stroke="#b6c6d6" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M164 126 Q192 126 210 134" fill="none" stroke="#b6c6d6" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- 握把的翅膀 -->
+          <path d="M214 116 Q262 118 300 146" fill="none" stroke="#e6eef6" stroke-width="16" stroke-linecap="round"/>
+          <path d="M214 116 Q262 118 300 146" fill="none" stroke="#c2d0de" stroke-width="16" stroke-linecap="round"
+                stroke-dasharray="2 1000" stroke-dashoffset="-990" opacity="0.0"/>
+          <circle cx="302" cy="148" r="9" fill="#eef3f8" stroke="#c9d6e2" stroke-width="2"/>
+
+          <!-- 脖子 -->
+          <path d="M206 108 Q228 90 246 66" fill="none" stroke="url(#bodyGrad)" stroke-width="24" stroke-linecap="round"/>
+          <path d="M206 108 Q228 90 246 66" fill="none" stroke="#dbe5ef" stroke-width="24" stroke-linecap="round"
+                opacity="0.35"/>
+
+          <!-- 头 -->
+          <g class="head">
+            <animateTransform attributeName="transform" type="rotate"
+              values="-2.5 250 62; 2.5 250 62; -2.5 250 62" dur="2.4s" repeatCount="indefinite"/>
+            <circle cx="256" cy="58" r="21" fill="url(#bodyGrad)" stroke="#c9d6e2" stroke-width="2"/>
+            <!-- 冠羽 -->
+            <path d="M242 40 Q248 26 262 30 Q254 36 252 44 Z" fill="#dbe5ef"/>
+            <!-- 眼睛 -->
+            <circle cx="264" cy="52" r="4.6" fill="#2b323a"/>
+            <circle cx="265.6" cy="50.4" r="1.5" fill="#ffffff"/>
+
+            <!-- 上喙 -->
+            <path d="M268 50 Q318 50 352 58 Q318 64 268 62 Z" fill="url(#beakGrad)" stroke="#d9902a" stroke-width="1.5"/>
+            <!-- 喙尖 -->
+            <path d="M348 57 L362 61 L348 64 Z" fill="#e8942c"/>
+            <!-- 喉囊 -->
+            <path d="M270 60 C292 92 330 86 350 60 C324 74 296 74 270 60 Z"
+                  fill="url(#pouchGrad)" stroke="#d9902a" stroke-width="1.5" opacity="0.95"/>
+            <path d="M282 66 Q312 78 338 62" fill="none" stroke="#d9902a" stroke-width="1.2" opacity="0.6"/>
+          </g>
+        </g>
+
+        <!-- 水花/风 -->
+        <g opacity="0.7">
+          <circle cx="92" cy="272" r="5" fill="#ffffff">
+            <animateTransform attributeName="transform" type="translate"
+              values="0 0; -40 -14; -70 -2" dur="1.6s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9; 0.3; 0" dur="1.6s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="92" cy="282" r="3.5" fill="#ffffff">
+            <animateTransform attributeName="transform" type="translate"
+              values="0 0; -34 -6; -62 4" dur="1.6s" begin="-0.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9; 0.3; 0" dur="1.6s" begin="-0.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="92" cy="266" r="4" fill="#ffffff">
+            <animateTransform attributeName="transform" type="translate"
+              values="0 0; -46 -22; -78 -10" dur="1.6s" begin="-1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9; 0.3; 0" dur="1.6s" begin="-1s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="puff"></div>
+  <div class="puff p2"></div>
+  <div class="puff p3"></div>
+
+</div>
+</body>
+</html>
